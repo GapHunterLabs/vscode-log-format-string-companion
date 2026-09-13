@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { scan } from './scanner';
+import { recordHit } from './reviewPrompt';
 
 let diagnostics: vscode.DiagnosticCollection;
 
@@ -11,7 +12,7 @@ function isApplicable(document: vscode.TextDocument): boolean {
   return APPLICABLE_EXTENSIONS.some((ext) => document.uri.path.endsWith(ext));
 }
 
-function refresh(document: vscode.TextDocument): void {
+function refresh(context: vscode.ExtensionContext, document: vscode.TextDocument): void {
   if (!isApplicable(document)) return;
 
   const hits = scan(document.getText());
@@ -25,17 +26,20 @@ function refresh(document: vscode.TextDocument): void {
     return diagnostic;
   });
   diagnostics.set(document.uri, result);
+  for (const hit of hits) {
+    recordHit(context, `${document.uri.toString()}:${hit.startOffset}`);
+  }
 }
 
 export function activate(context: vscode.ExtensionContext): void {
   diagnostics = vscode.languages.createDiagnosticCollection('logFormatStringCompanion');
   context.subscriptions.push(diagnostics);
 
-  vscode.workspace.textDocuments.forEach(refresh);
+  vscode.workspace.textDocuments.forEach((doc) => refresh(context, doc));
 
   context.subscriptions.push(
-    vscode.workspace.onDidOpenTextDocument(refresh),
-    vscode.workspace.onDidChangeTextDocument((event) => refresh(event.document)),
+    vscode.workspace.onDidOpenTextDocument((doc) => refresh(context, doc)),
+    vscode.workspace.onDidChangeTextDocument((event) => refresh(context, event.document)),
     vscode.workspace.onDidCloseTextDocument((document) => diagnostics.delete(document.uri)),
   );
 }
