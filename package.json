@@ -2,7 +2,7 @@
   "name": "log-format-string-companion",
   "displayName": "Log Format String Companion",
   "description": "Flags a log call whose placeholder count doesn't match its argument count (SLF4J {} and Python %-style) -- no data leaves your editor.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "GapHunterLabs",
   "icon": "images/icon.png",
   "license": "Apache-2.0",
